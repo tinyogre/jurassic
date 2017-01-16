@@ -32,6 +32,9 @@ namespace Jurassic.Compiler
         /// </summary>
         public override void Complete()
         {
+            // Call the base class.
+            base.Complete();
+
             Return();
         }
 

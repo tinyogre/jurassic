@@ -28,7 +28,10 @@ namespace Jurassic.Compiler
         /// Emits a return statement and finalizes the generated code.  Do not emit any more
         /// instructions after calling this method.
         /// </summary>
-        public abstract void Complete();
+        public virtual void Complete()
+        {
+            VerifyTemporaryVariables();
+        }
 
 
 
@@ -283,6 +286,7 @@ namespace Jurassic.Compiler
         //_________________________________________________________________________________________
 
         private List<ILLocalVariable> temporaryVariables;
+        private List<ILLocalVariable> reusableTemporaryVariables;
 
         /// <summary>
         /// Retrieves a temporary variable with the given type, reusing a previous variable if
@@ -294,21 +298,29 @@ namespace Jurassic.Compiler
         {
             if (type == null)
                 throw new ArgumentNullException("type");
-            if (this.temporaryVariables != null)
+            if (this.reusableTemporaryVariables != null)
             {
-                for (int i = 0; i < this.temporaryVariables.Count; i++)
+                for (int i = 0; i < this.reusableTemporaryVariables.Count; i++)
                 {
-                    if (this.temporaryVariables[i].Type == type)
+                    if (this.reusableTemporaryVariables[i].Type == type)
                     {
-                        var result = this.temporaryVariables[i];
-                        this.temporaryVariables.RemoveAt(i);
+                        var result = this.reusableTemporaryVariables[i];
+                        this.reusableTemporaryVariables.RemoveAt(i);
+                        if (this.temporaryVariables == null)
+                            this.temporaryVariables = new List<ILLocalVariable>();
+                        this.temporaryVariables.Add(result);
                         return result;
                     }
                 }
             }
 
             // Create a new temporary variable.
-            return DeclareVariable(type);
+            var newVariable = DeclareVariable(type);
+
+            if (this.temporaryVariables == null)
+                this.temporaryVariables = new List<ILLocalVariable>();
+            this.temporaryVariables.Add(newVariable);
+            return newVariable;
         }
 
         /// <summary>
@@ -330,11 +342,23 @@ namespace Jurassic.Compiler
         {
             if (temporaryVariable == null)
                 throw new ArgumentNullException("temporaryVariable");
-            if (this.temporaryVariables == null)
-                this.temporaryVariables = new List<ILLocalVariable>();
-            this.temporaryVariables.Add(temporaryVariable);
+            if (this.temporaryVariables != null)
+                this.temporaryVariables.Remove(temporaryVariable);
+            if (this.reusableTemporaryVariables == null)
+                this.reusableTemporaryVariables = new List<ILLocalVariable>();
+            this.reusableTemporaryVariables.Add(temporaryVariable);
         }
 
+        /// <summary>
+        /// Checks that all variables created with <see cref="CreateTemporaryVariable"/> were
+        /// released with <see cref="ReleaseTemporaryVariable"/>.
+        /// </summary>
+        [System.Diagnostics.Conditional("DEBUG")]
+        private void VerifyTemporaryVariables()
+        {
+            if (this.temporaryVariables != null && this.temporaryVariables.Count > 0)
+                throw new InvalidOperationException("ReleaseTemporaryVariable was not called.");
+        }
 
 
         //     LOAD CONSTANT

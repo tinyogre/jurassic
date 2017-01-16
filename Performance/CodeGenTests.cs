@@ -289,9 +289,13 @@ namespace Performance
                 L013: ldloc      V1 (returnValue)
                       ret
                 "),
-                GetFunctionIL(@"function f() {
-                    for (var i = 0; i < 10; i ++)
-                        return 1;
+                GetFunctionIL(@"
+var x = 1;
+function f() {
+                    
+x++;
+x++;
+x++;
                 }", "f"));
         }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Jurassic.Library;
+using System;
 using ErrorType = Jurassic.Library.ErrorType;
 
 namespace Jurassic.Compiler
@@ -224,11 +225,11 @@ namespace Jurassic.Compiler
                         generator.Call(ReflectionHelpers.ObjectScope_ScopeObject);
 
                         // TODO: share these variables somehow.
-                        var cacheKey = generator.DeclareVariable(typeof(object));
-                        var cachedIndex = generator.DeclareVariable(typeof(int));
+                        var cacheKey = generator.CreateTemporaryVariable(typeof(object));
+                        var cachedIndex = generator.CreateTemporaryVariable(typeof(int));
 
                         // Store the object into a temp variable.
-                        var objectInstance = generator.DeclareVariable(PrimitiveType.Object);
+                        var objectInstance = generator.CreateTemporaryVariable(typeof(ObjectInstance));
                         generator.StoreVariable(objectInstance);
 
                         // if (__object_cacheKey != object.InlineCacheKey)
@@ -265,6 +266,10 @@ namespace Jurassic.Compiler
                         generator.BranchIfNotNull(endOfGet);
                         if (scope.ParentScope != null)
                             generator.Pop();
+
+                        generator.ReleaseTemporaryVariable(objectInstance);
+                        generator.ReleaseTemporaryVariable(cachedIndex);
+                        generator.ReleaseTemporaryVariable(cacheKey);
 
                     }
                     else
@@ -487,11 +492,11 @@ namespace Jurassic.Compiler
                         generator.Call(ReflectionHelpers.ObjectScope_ScopeObject);
 
                         // TODO: share these variables somehow.
-                        var cacheKey = generator.DeclareVariable(typeof(object));
-                        var cachedIndex = generator.DeclareVariable(typeof(int));
+                        var cacheKey = generator.CreateTemporaryVariable(typeof(object));
+                        var cachedIndex = generator.CreateTemporaryVariable(typeof(int));
 
                         // Store the object into a temp variable.
-                        var objectInstance = generator.DeclareVariable(PrimitiveType.Object);
+                        var objectInstance = generator.CreateTemporaryVariable(typeof(ObjectInstance));
                         generator.StoreVariable(objectInstance);
 
                         // if (__object_cacheKey != object.InlineCacheKey)
@@ -538,6 +543,10 @@ namespace Jurassic.Compiler
 
                         // End of the if statement
                         generator.DefineLabelPosition(endOfIf);
+
+                        generator.ReleaseTemporaryVariable(objectInstance);
+                        generator.ReleaseTemporaryVariable(cacheKey);
+                        generator.ReleaseTemporaryVariable(cachedIndex);
 
                     }
                     else

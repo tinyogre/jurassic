@@ -116,6 +116,9 @@ namespace Jurassic.Compiler
         /// </summary>
         public override unsafe void Complete()
         {
+            // Call the base class.
+            base.Complete();
+
             // Check there aren't any outstanding exception blocks.
             if (this.activeExceptionRegions != null && this.activeExceptionRegions.Count > 0)
                 throw new InvalidOperationException("The current method contains unclosed exception blocks.");

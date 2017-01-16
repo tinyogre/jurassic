@@ -1,4 +1,5 @@
-﻿using ErrorType = Jurassic.Library.ErrorType;
+﻿using Jurassic.Library;
+using ErrorType = Jurassic.Library.ErrorType;
 
 namespace Jurassic.Compiler
 {
@@ -239,11 +240,11 @@ namespace Jurassic.Compiler
                 //     xxx = object.InlinePropertyValues[__object_property_cachedIndex];
 
                 // TODO: share these variables somehow.
-                var cacheKey = generator.DeclareVariable(typeof(object));
-                var cachedIndex = generator.DeclareVariable(typeof(int));
+                var cacheKey = generator.CreateTemporaryVariable(typeof(object));
+                var cachedIndex = generator.CreateTemporaryVariable(typeof(int));
 
                 // Store the object into a temp variable.
-                var objectInstance = generator.DeclareVariable(PrimitiveType.Object);
+                var objectInstance = generator.CreateTemporaryVariable(typeof(ObjectInstance));
                 generator.StoreVariable(objectInstance);
 
                 // if (__object_cacheKey != object.InlineCacheKey)
@@ -274,6 +275,10 @@ namespace Jurassic.Compiler
 
                 // End of the if statement
                 generator.DefineLabelPosition(endOfIf);
+
+                generator.ReleaseTemporaryVariable(objectInstance);
+                generator.ReleaseTemporaryVariable(cachedIndex);
+                generator.ReleaseTemporaryVariable(cacheKey);
 
             }
             else

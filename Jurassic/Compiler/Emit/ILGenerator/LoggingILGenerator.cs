@@ -49,6 +49,7 @@ namespace Jurassic.Compiler
         /// </summary>
         public override void Complete()
         {
+            base.Complete();
             Log("ret");
             this.generator.Complete();
         }
