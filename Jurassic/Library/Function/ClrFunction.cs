@@ -18,7 +18,21 @@ namespace Jurassic.Library
         private Binder callBinder;
         private Binder constructBinder;
 
+        /// <summary>
+        /// Flags for ClrFunction constructor
+        /// </summary>
+        [Flags]
+        public enum Flag {
+            /// <summary>
+            /// Default behavior
+            /// </summary>
+            None = 0,
 
+            /// <summary>
+            /// Include inherited functions when searching for JSConstructorFunction and JSCallFunction
+            /// </summary>
+            InheritedFunctions = 1 << 0,
+        }
         //     INITIALIZATION
         //_________________________________________________________________________________________
 
@@ -28,7 +42,8 @@ namespace Jurassic.Library
         /// <param name="prototype"> The next object in the prototype chain. </param>
         /// <param name="name"> The name of the function. </param>
         /// <param name="instancePrototype">  </param>
-        protected ClrFunction(ObjectInstance prototype, string name, ObjectInstance instancePrototype)
+        /// <param name="flags">Modify behavior according to ClrFunction.Flag</param>
+        protected ClrFunction(ObjectInstance prototype, string name, ObjectInstance instancePrototype, Flag flags = Flag.None)
             : base(prototype)
         {
             if (name == null)
@@ -42,7 +57,12 @@ namespace Jurassic.Library
             // Search through every method in this type looking for [JSCallFunction] and [JSConstructorFunction] attributes.
             var callBinderMethods = new List<JSBinderMethod>(1);
             var constructBinderMethods = new List<JSBinderMethod>(1);
-            var methods = this.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+            if ((flags & Flag.InheritedFunctions) == 0)
+            {
+                bindingFlags |= BindingFlags.DeclaredOnly;
+            }
+            var methods = this.GetType().GetMethods(bindingFlags);
             foreach (var method in methods)
             {
                 // Search for the [JSCallFunction] and [JSConstructorFunction] attributes.
